@@ -1,5 +1,8 @@
 package nouteji.bot;
 
+import org.apache.commons.validator.routines.UrlValidator;
+
+import java.io.File;
 import java.net.URL;
 
 public class NoutejiBot {
@@ -7,12 +10,10 @@ public class NoutejiBot {
     public static void main( String[] args )
     {
 
-        // System.out.println( "Hello Joyce" );
         ValiderNombreArguments(args.length);
         ValiderArgumentProfondeur(Integer.parseInt(args[0]));
-       // ValiderUrl(args[1]);
-
-
+        ValiderArgumentUrl(args[1]);
+        // ValiderUrl(args[1]);
     }
 
     public static int ValiderNombreArguments(int length)
@@ -36,19 +37,29 @@ public class NoutejiBot {
 
     }
 
+    public static boolean ValiderArgumentUrl (String lien)
+   {
+           if (!UrlValidator.getInstance().isValid(lien))
+           {
+               System.out.println("url est invalide");
+           }
+           else
+           {
+               System.out.println("url est valide");
+           }
 
-    public static class Test {
+          return UrlValidator.getInstance().isValid(lien);
 
-        public static boolean isValidURL(String url){
-            try {
-                URL u = new URL(url);
-                u.openConnection().connect();
-            } catch (Exception e) {
-                return false;
-            }
-            return true;
-        }
+   }
+
+    // le répertoire où écrire les copies locales des fichiers explorés. Le dossier doit être accessible et on doit pouvoir y écrire. Ecriture seulement
+    // est accessible en lecture
+
+    public static File ValiderArgumentDossier (String Dossier)
+    {
+      throw new UnsupportedOperationException()  ;
+
+
     }
-
 
 }
