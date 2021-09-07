@@ -3,6 +3,7 @@ package nouteji.bot;
 import org.apache.commons.validator.routines.UrlValidator;
 
 import java.io.File;
+
 import java.net.URL;
 
 public class NoutejiBot {
@@ -13,7 +14,7 @@ public class NoutejiBot {
         ValiderNombreArguments(args.length);
         ValiderArgumentProfondeur(Integer.parseInt(args[0]));
         ValiderArgumentUrl(args[1]);
-        // ValiderUrl(args[1]);
+        ValiderArgumentDossier(args[2]);
     }
 
     public static int ValiderNombreArguments(int length)
@@ -57,9 +58,37 @@ public class NoutejiBot {
 
     public static File ValiderArgumentDossier (String Dossier)
     {
-      throw new UnsupportedOperationException()  ;
+//        File Directory = new File(Dossier);
+//
+//        try{
+//            if(Directory.mkdir()) {
+//                System.out.println("Dossier crée");
+//            } else {
+//                System.out.println("Dossier existe déja");
+//            }
+//        } catch(Exception e){
+//            e.printStackTrace();
+//        }
 
+        // création du dossier
+        new File(Dossier).mkdirs();
 
+        // je vais essayer de creer un fichier dans le dossier
+        File Lefichier = new File(Dossier,"monFichier");
+
+        // ca marche donc le dossier existe et je peux ecrire, vite je detruis le fichier que je viens de creer
+        if(Lefichier.exists())
+        {
+            Lefichier.delete();
+
+        }
+        // ca marche pas > messa ge erreur
+        else
+        {
+            System.out.println("le dossier n'existe pas");
+        }
+
+        return Lefichier;
     }
 
 }
