@@ -1,9 +1,15 @@
 package nouteji.bot;
 
 import org.apache.commons.validator.routines.UrlValidator;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.select.Elements;
+
 
 import java.io.File;
 
+import java.io.IOException;
+import java.lang.annotation.Documented;
 import java.net.URL;
 
 public class NoutejiBot {
@@ -75,7 +81,6 @@ public class NoutejiBot {
 
         // je vais essayer de creer un fichier dans le dossier
         File Lefichier = new File(Dossier,"monFichier");
-
         // ca marche donc le dossier existe et je peux ecrire, vite je detruis le fichier que je viens de creer
         if(Lefichier.exists())
         {
@@ -90,5 +95,30 @@ public class NoutejiBot {
 
         return Lefichier;
     }
+
+    // Traitement
+    // gestion de la profondeur
+
+    public static void Explorer(String url,int taille)
+    {
+      for(int index = 0; index <= taille; index++)
+      {
+          try{
+              Document doc = Jsoup.connect(url).get();
+
+              Elements links = doc.select("a[href]"); // a with href
+
+
+          }
+          catch (IOException e)
+          {
+              System.err.println("Error");
+          }
+          System.out.println(url);
+      }
+
+
+    }
+
 
 }
