@@ -3,6 +3,7 @@ package nouteji.bot;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 
@@ -11,6 +12,10 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.Documented;
 import java.net.URL;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class NoutejiBot {
 
@@ -21,6 +26,7 @@ public class NoutejiBot {
         ValiderArgumentProfondeur(Integer.parseInt(args[0]));
         ValiderArgumentUrl(args[1]);
         ValiderArgumentDossier(args[2]);
+
     }
 
     public static int ValiderNombreArguments(int length)
@@ -39,92 +45,75 @@ public class NoutejiBot {
         {
             System.err.println("la profondeur ne peut etre négative");
         }
-
+        else
+        {
+            System.out.println("La profondeur est correcte");
+        }
         return profondeur;
-
     }
 
-    public static boolean ValiderArgumentUrl (String lien)
+    public static Boolean ValiderArgumentUrl (String lien)
    {
            if (!UrlValidator.getInstance().isValid(lien))
            {
-               System.out.println("url est invalide");
+               System.err.println("url est invalide");
+
            }
            else
            {
                System.out.println("url est valide");
+
            }
-
-          return UrlValidator.getInstance().isValid(lien);
-
+        return UrlValidator.getInstance().isValid(lien);
    }
 
     // le répertoire où écrire les copies locales des fichiers explorés. Le dossier doit être accessible et on doit pouvoir y écrire. Ecriture seulement
     // est accessible en lecture
 
-    public static File ValiderArgumentDossier (String Dossier)
+    public static Boolean ValiderArgumentDossier (String Dossier)
     {
 
-        File Directory = new File(Dossier);
-//
-//        try{
-//            if(Directory.mkdir()) {
-//                System.out.println("Dossier crée");
-//            } else {
-//                System.out.println("Dossier existe déja");
-//            }
-//        } catch(Exception e){
-//            e.printStackTrace();
-//        }
-
-        if(!Directory.exists())
+        File monfichier = new File(Dossier);
+        if(!monfichier.exists())
         {
-            System.out.println("Dossier existe pas");
+            System.err.println("Dossier n'existe pas");
+            return false;
         }
-
-        // création du dossier
-        /*new File(Dossier).mkdirs();
-
-        // je vais essayer de creer un fichier dans le dossier
-        File Lefichier = new File(Dossier,"monFichier");
-        // ca marche donc le dossier existe et je peux ecrire, vite je detruis le fichier que je viens de creer
-        if(Lefichier.exists())
-        {
-            Lefichier.delete();
-
-        }
-        // ca marche pas > messa ge erreur
         else
         {
-            System.out.println("le dossier n'existe pas");
+            System.out.println("c'est good");
+            return true;
         }
 
-        return Lefichier;*/
-        return Directory;
     }
 
     // Traitement
     // gestion de la profondeur
 
-    public static void Explorer(String url, int Taille )
+    public static void Explorer(String url, int Taille)
     {
-
-        for(int i = 0; i <= Taille; i++)
+        for(int index = 0; index <= Taille; index++)
         {
             try{
                 Document doc = Jsoup.connect(url).get();
 
-                Elements links = doc.select("a[href]"); // a with href
+                //  System.out.println(url);
 
-            //    Elements links2 = links.select("a[href]") ; // pronfondeur 2
+                Pattern p = Pattern.compile("[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+");
+                Matcher matcher = p.matcher(doc.text());
+                Set<String> emails = new HashSet<String>();
+                while (matcher.find()) {
+                    emails.add(matcher.group());
+                }                                                        // extraire couriel
 
-             //   System.out.println(url);                                                                                          // profondeur 0
+                                                                        // ecrire fichier
 
-                System.out.println(links);  // + System.out.println(url)                                                            // profondeur 1
+                Set<String> lesLiens = new HashSet<String>();
+                Elements links = doc.select("a[href]");
+                for (Element e : links) {
+                    lesLiens.add(e.attr("href"));            // extraire les liens
 
-            //      System.out.println(links2); // + System.out.println(url) +   System.out.println(links)                          // profondeur 2
-
-
+                }
             }
             catch (IOException e)
             {
@@ -133,10 +122,6 @@ public class NoutejiBot {
 
         }
 
-
-
-
-    }
-
+       }
 
 }
