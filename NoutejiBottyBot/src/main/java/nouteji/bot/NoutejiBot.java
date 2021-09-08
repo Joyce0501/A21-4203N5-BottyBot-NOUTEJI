@@ -64,7 +64,8 @@ public class NoutejiBot {
 
     public static File ValiderArgumentDossier (String Dossier)
     {
-//        File Directory = new File(Dossier);
+
+        File Directory = new File(Dossier);
 //
 //        try{
 //            if(Directory.mkdir()) {
@@ -76,8 +77,13 @@ public class NoutejiBot {
 //            e.printStackTrace();
 //        }
 
+        if(!Directory.exists())
+        {
+            System.out.println("Dossier existe pas");
+        }
+
         // création du dossier
-        new File(Dossier).mkdirs();
+        /*new File(Dossier).mkdirs();
 
         // je vais essayer de creer un fichier dans le dossier
         File Lefichier = new File(Dossier,"monFichier");
@@ -93,29 +99,41 @@ public class NoutejiBot {
             System.out.println("le dossier n'existe pas");
         }
 
-        return Lefichier;
+        return Lefichier;*/
+        return Directory;
     }
 
     // Traitement
     // gestion de la profondeur
 
-    public static void Explorer(String url,int taille)
+    public static void Explorer(String url, int Taille )
     {
-      for(int index = 0; index <= taille; index++)
-      {
-          try{
-              Document doc = Jsoup.connect(url).get();
 
-              Elements links = doc.select("a[href]"); // a with href
+        for(int i = 0; i <= Taille; i++)
+        {
+            try{
+                Document doc = Jsoup.connect(url).get();
+
+                Elements links = doc.select("a[href]"); // a with href
+
+            //    Elements links2 = links.select("a[href]") ; // pronfondeur 2
+
+             //   System.out.println(url);                                                                                          // profondeur 0
+
+                System.out.println(links);  // + System.out.println(url)                                                            // profondeur 1
+
+            //      System.out.println(links2); // + System.out.println(url) +   System.out.println(links)                          // profondeur 2
 
 
-          }
-          catch (IOException e)
-          {
-              System.err.println("Error");
-          }
-          System.out.println(url);
-      }
+            }
+            catch (IOException e)
+            {
+                System.err.println("Error");
+            }
+
+        }
+
+
 
 
     }
