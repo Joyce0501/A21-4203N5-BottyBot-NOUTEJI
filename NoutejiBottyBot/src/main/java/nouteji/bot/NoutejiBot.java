@@ -7,11 +7,14 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 
-import java.io.File;
+import java.io.*;
 
-import java.io.IOException;
 import java.lang.annotation.Documented;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -26,6 +29,7 @@ public class NoutejiBot {
         ValiderArgumentProfondeur(Integer.parseInt(args[0]));
         ValiderArgumentUrl(args[1]);
         ValiderArgumentDossier(args[2]);
+        Explorer("https://departement-info-cem.github.io/3N5-Prog3/testbot/",1);
 
     }
 
@@ -90,14 +94,13 @@ public class NoutejiBot {
     // Traitement
     // gestion de la profondeur
 
-    public static void Explorer(String url, int Taille)
+    public static void Explorer(String url, int profondeur)
     {
-        for(int index = 0; index <= Taille; index++)
+
+        if(profondeur > 0)
         {
             try{
                 Document doc = Jsoup.connect(url).get();
-
-                //  System.out.println(url);
 
                 Pattern p = Pattern.compile("[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+");
                 Matcher matcher = p.matcher(doc.text());
@@ -105,20 +108,53 @@ public class NoutejiBot {
                 while (matcher.find()) {
                     emails.add(matcher.group());
                 }                                                        // extraire couriel
+                System.out.println(emails);
 
-                                                                        // ecrire fichier
+
+//                Element link = doc.select("a").first();
+//                String relHref = link.attr("href");
+//                String absHref = link.attr("abs:href");
+
+
+
 
                 Set<String> lesLiens = new HashSet<String>();
                 Elements links = doc.select("a[href]");
                 for (Element e : links) {
-                    lesLiens.add(e.attr("href"));            // extraire les liens
+                    lesLiens.add(e.attr("abs:href"));
+                }
+                System.out.println(lesLiens);
+
+                for (String elt : lesLiens) {
+
+                  //  String contenu = lesLiens.
 
                 }
+                // extraire les liens
+
+                Element link = doc.select("a").first();
+                String relHref = link.attr("href");
+                Path file = Paths.get(relHref);
+                PrintWriter ecriture = new PrintWriter(new FileOutputStream(relHref,true));
+                if(!Files.exists(file))
+                {
+                    Files.createFile(file);
+                }
+                ecriture.println("abs:href");                                                                    // ecrire fichier
+
+
+
+//                System.out.println(absHref);
+//                System.out.println(relHref); // pour mettre dans un fichier portant ce nom. (1.html)
             }
+
             catch (IOException e)
             {
                 System.err.println("Error");
             }
+
+            profondeur--;
+            //  }
 
         }
 
