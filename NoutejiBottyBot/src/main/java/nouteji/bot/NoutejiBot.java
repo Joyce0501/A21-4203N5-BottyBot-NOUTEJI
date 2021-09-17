@@ -7,21 +7,27 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 
+import javax.print.Doc;
 import java.io.*;
 
 import java.lang.annotation.Documented;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class NoutejiBot {
 
+  private static final   Pattern p = Pattern.compile("[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+");
+    private static final  Document doc = Jsoup.connect(url).get();
     public static void main( String[] args )
     {
 
@@ -29,7 +35,7 @@ public class NoutejiBot {
         ValiderArgumentProfondeur(Integer.parseInt(args[0]));
         ValiderArgumentUrl(args[1]);
         ValiderArgumentDossier(args[2]);
-        Explorer("https://departement-info-cem.github.io/3N5-Prog3/testbot/",1);
+     //   Explorer("https://departement-info-cem.github.io/3N5-Prog3/testbot/",1);
 
     }
 
@@ -94,70 +100,53 @@ public class NoutejiBot {
     // Traitement
     // gestion de la profondeur
 
-    public static void Explorer(String url, int profondeur)
+    // liste d'url , les avoir dans l'irdre te les explorer , a chaque fois on ajoute une url tout en vérifiant qu'on l'a pas encore exploré
+    public static void Explorer(String path, int profondeur,int urlvisites)
+
     {
 
-        if(profondeur > 0)
-        {
-            try{
-                Document doc = Jsoup.connect(url).get();
-
-                Pattern p = Pattern.compile("[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+");
-                Matcher matcher = p.matcher(doc.text());
-                Set<String> emails = new HashSet<String>();
-                while (matcher.find()) {
-                    emails.add(matcher.group());
-                }                                                        // extraire couriel
-                System.out.println(emails);
-
-
-//                Element link = doc.select("a").first();
-//                String relHref = link.attr("href");
-//                String absHref = link.attr("abs:href");
-
-
-
-
-                Set<String> lesLiens = new HashSet<String>();
-                Elements links = doc.select("a[href]");
-                for (Element e : links) {
-                    lesLiens.add(e.attr("abs:href"));
-                }
-                System.out.println(lesLiens);
-
-                for (String elt : lesLiens) {
-
-                  //  String contenu = lesLiens.
-
-                }
-                // extraire les liens
-
-                Element link = doc.select("a").first();
-                String relHref = link.attr("href");
-                Path file = Paths.get(relHref);
-                PrintWriter ecriture = new PrintWriter(new FileOutputStream(relHref,true));
-                if(!Files.exists(file))
-                {
-                    Files.createFile(file);
-                }
-                ecriture.println("abs:href");                                                                    // ecrire fichier
-
-
-
-//                System.out.println(absHref);
-//                System.out.println(relHref); // pour mettre dans un fichier portant ce nom. (1.html)
-            }
-
-            catch (IOException e)
-            {
-                System.err.println("Error");
-            }
+        if(profondeur == 0)
+        return;
 
             profondeur--;
-            //  }
 
-        }
+    }
 
-       }
+    public static void Sauvegarder(String Dossier, String url, Document fichier) throws IOException {
+      // le but est d'enregistrer le fichier dans e dossier
+        URL unlien = new URL(url);
+
+        // remplacer les adresses courriels par le mien
+        String remplacement = fichier.toString().replaceAll(String.valueOf(p),"1983276@cegepmontpetit.ca");
+
+        // lieu de fichier
+        File newfile = new File(Dossier + unlien.getPath().replaceAll("[\\\\:*?<>|]","-"));
+
+        // cree le dossier parent
+        Files.createDirectories(Paths.get(newfile.getParent()));
+
+        // cree le fichier
+        FileWriter ecriture = new FileWriter(newfile.getPath());
+
+        // ecrire mon courriel
+        ecriture.write(remplacement);
+
+        ecriture.close();
+
+    }
+
+    //extraire mes courriels
+
+     public static void  ChercherCourriels(String url, Document docourriel)
+     {
+         Matcher matcher = p.matcher(docourriel.text());
+         List<String> emails = new ArrayList<>();
+         while (matcher.find()) {
+             if(!emails.contains(matcher.group())) emails.add(matcher.group());
+         }
+         // me creer une profondeur actuelle
+         System.out.println("Exploration de " + url);
+
+     }
 
 }
