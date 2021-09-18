@@ -1,6 +1,7 @@
 package nouteji.bot;
 
 import org.apache.commons.validator.routines.UrlValidator;
+import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -27,7 +28,7 @@ import java.util.regex.Pattern;
 public class NoutejiBot {
 
   private static final   Pattern p = Pattern.compile("[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+");
-    private static final  Document doc = Jsoup.connect(url).get();
+    // private static final  Document doc = Jsoup.connect(url).get();
     public static void main( String[] args )
     {
 
@@ -64,14 +65,17 @@ public class NoutejiBot {
 
     public static Boolean ValiderArgumentUrl (String lien)
    {
+
            if (!UrlValidator.getInstance().isValid(lien))
            {
                System.err.println("url est invalide");
+
 
            }
            else
            {
                System.out.println("url est valide");
+              // UrlValides.add(lien);
 
            }
         return UrlValidator.getInstance().isValid(lien);
@@ -101,15 +105,75 @@ public class NoutejiBot {
     // gestion de la profondeur
 
     // liste d'url , les avoir dans l'irdre te les explorer , a chaque fois on ajoute une url tout en vérifiant qu'on l'a pas encore exploré
-    public static void Explorer(String path, int profondeur,int urlvisites)
-
-    {
+    public static void Explorer(String path, int profondeur,int urlvisites,String lurl) throws IOException, InterruptedException {
 
         if(profondeur == 0)
-        return;
+        {
+          //  List<String> emailsenordre = emails
+            return;
+        }
 
-            profondeur--;
 
+        Document doc = Jsoup.connect(lurl).get();
+
+            List<String> lesLiens = new ArrayList<String>();
+            Elements links = doc.select("a[href]");
+            for (Element e : links) {
+                lesLiens.add(e.attr("abs:href"));
+            }
+
+
+        // step 1: url a partir de l'index jamais exploré
+        int taille = lesLiens.size();
+            for (int i = urlvisites; i <= taille; i++)
+            {
+                String urlCourante = lesLiens.get(1);
+                Document documentUrlCourante = Jsoup.connect(urlCourante).get();
+                Elements elt = documentUrlCourante.select("a");
+                for(Element element : elt)
+
+                {
+                    // liberation d'espace
+                    while (Thread.activeCount() > 10)
+                    {
+                        Thread.sleep(20);
+                    }
+
+                    String urlTrouvee = element.absUrl("href");
+                    if(ValiderArgumentUrl(urlTrouvee) == true)
+                    {
+                        return;
+                    }
+                    // l'url decouverte n'est pas valide et pas explorée
+                    try{
+                        new URL(urlTrouvee);
+                        Document documentUrlTrouvee = Jsoup.connect(urlTrouvee).get();
+                        lesLiens.add(urlTrouvee);
+                        ChercherCourriels(urlTrouvee,documentUrlTrouvee);
+                        Sauvegarder(path,urlTrouvee,documentUrlTrouvee);
+                    }
+
+                    //url incorrecte
+                    catch (MalformedURLException e)
+                    {
+                        if(ValiderArgumentUrl(urlTrouvee) == false)
+                        {
+                            System.out.println("Url mal formée :" + urlTrouvee);
+                        }
+                    }
+                    // url non joignables
+                    catch (Exception e)
+                    {
+                        if(ValiderArgumentUrl(urlTrouvee) == false)
+                        {
+                            System.out.println("Url injoignable :" + urlTrouvee);
+                        }
+                    }
+
+                    // pages web existantes mais non consultables
+
+                }
+            }
     }
 
     public static void Sauvegarder(String Dossier, String url, Document fichier) throws IOException {
