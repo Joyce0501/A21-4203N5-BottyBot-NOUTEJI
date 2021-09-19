@@ -6,6 +6,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import sun.nio.ch.ThreadPool;
 
 
 import javax.print.Doc;
@@ -28,16 +29,19 @@ import java.util.regex.Pattern;
 public class NoutejiBot {
 
   private static final   Pattern p = Pattern.compile("[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+");
+  public static final   List<String> lesLiens = new ArrayList<String>();
+  public static final HashSet<String> lesliensSet = new HashSet<>();
+  public static final  List<String> emails = new ArrayList<>();
+  public static boolean ArgumentErreurs;
+
     // private static final  Document doc = Jsoup.connect(url).get();
-    public static void main( String[] args )
-    {
+    public static void main( String[] args ) throws IOException, InterruptedException {
 
         ValiderNombreArguments(args.length);
-        ValiderArgumentProfondeur(Integer.parseInt(args[0]));
+        ValiderArgumentProfondeur(args[0]);
         ValiderArgumentUrl(args[1]);
         ValiderArgumentDossier(args[2]);
-     //   Explorer("https://departement-info-cem.github.io/3N5-Prog3/testbot/",1);
-
+        Explorer1erUrl(args[1],args[2],Integer.parseInt(args[0]));
     }
 
     public static int ValiderNombreArguments(int length)
@@ -50,26 +54,38 @@ public class NoutejiBot {
         return length;
     }
 
-    public static int ValiderArgumentProfondeur(int profondeur)
+    public static void ValiderArgumentProfondeur(String profondeur)
     {
-        if (profondeur < 0)
+        try
         {
-            System.err.println("la profondeur ne peut etre négative");
+
+            int LaProfondeur =  Integer.parseInt(profondeur);
+
+            if ( LaProfondeur < 0 || LaProfondeur > 99)
+            {
+                System.err.println("la profondeur doit etre comprise entre 0 et 99 inclusivement");
+            }
+            else
+            {
+                System.out.println("La profondeur est correcte");
+            }
+
         }
-        else
+        catch (Exception e)
         {
-            System.out.println("La profondeur est correcte");
+            System.out.println("Ceci n'est pas un nombre");
         }
-        return profondeur;
+
+
     }
 
-    public static Boolean ValiderArgumentUrl (String lien)
+    public static boolean ValiderArgumentUrl (String lien)
    {
 
-           if (!UrlValidator.getInstance().isValid(lien))
+
+          if (!UrlValidator.getInstance().isValid(lien))
            {
                System.err.println("url est invalide");
-
 
            }
            else
@@ -101,80 +117,101 @@ public class NoutejiBot {
 
     }
 
+    // explorer 1ere url
+    public static void Explorer1erUrl(String url,String dossier,int profondeur) throws IOException, InterruptedException {
+        lesliensSet.add(url);
+        lesLiens.add(url);
+        Document doc = Jsoup.connect(url).get();
+        ChercherCourriels(url,doc);
+        Sauvegarder(dossier,url,doc);
+        Explorer(dossier,profondeur,0);
+
+    }
     // Traitement
     // gestion de la profondeur
 
     // liste d'url , les avoir dans l'irdre te les explorer , a chaque fois on ajoute une url tout en vérifiant qu'on l'a pas encore exploré
-    public static void Explorer(String path, int profondeur,int urlvisites,String lurl) throws IOException, InterruptedException {
+    public static void Explorer(String path, int profondeur,int urlvisites) throws IOException, InterruptedException {
+
 
         if(profondeur == 0)
         {
           //  List<String> emailsenordre = emails
+
+            List<String> subList = emails.subList(0, emails.size());
+            subList.sort(String.CASE_INSENSITIVE_ORDER);
+            System.out.println("Nombre de pages explorées : " + lesLiens.size());
+            System.out.println("Nombre de courriels extraits en ordre alphabétique : " + emails.size());
+            for(int i = 0; i <= emails.size();i++)
+            {
+                System.out.println(emails.get(i));
+            }
             return;
+
         }
 
-
-        Document doc = Jsoup.connect(lurl).get();
-
-            List<String> lesLiens = new ArrayList<String>();
+      /*  Document doc = Jsoup.connect(lurl).get();
             Elements links = doc.select("a[href]");
             for (Element e : links) {
                 lesLiens.add(e.attr("abs:href"));
-            }
+
+            } */
 
 
         // step 1: url a partir de l'index jamais exploré
         int taille = lesLiens.size();
             for (int i = urlvisites; i <= taille; i++)
             {
-                String urlCourante = lesLiens.get(1);
+
+                String urlCourante = lesLiens.get(i);
                 Document documentUrlCourante = Jsoup.connect(urlCourante).get();
                 Elements elt = documentUrlCourante.select("a");
                 for(Element element : elt)
 
                 {
-                    // liberation d'espace
-                    while (Thread.activeCount() > 10)
-                    {
-                        Thread.sleep(20);
-                    }
 
                     String urlTrouvee = element.absUrl("href");
-                    if(ValiderArgumentUrl(urlTrouvee) == true)
+                    if(lesliensSet.contains(urlTrouvee))
                     {
                         return;
                     }
+
                     // l'url decouverte n'est pas valide et pas explorée
                     try{
                         new URL(urlTrouvee);
                         Document documentUrlTrouvee = Jsoup.connect(urlTrouvee).get();
                         lesLiens.add(urlTrouvee);
+                        lesliensSet.add(urlTrouvee);
                         ChercherCourriels(urlTrouvee,documentUrlTrouvee);
                         Sauvegarder(path,urlTrouvee,documentUrlTrouvee);
+
                     }
 
                     //url incorrecte
                     catch (MalformedURLException e)
                     {
-                        if(ValiderArgumentUrl(urlTrouvee) == false)
-                        {
+                      //  if(ValiderArgumentUrl(urlTrouvee) == false)
+                   //     {
                             System.out.println("Url mal formée :" + urlTrouvee);
-                        }
+                     //   }
                     }
                     // url non joignables
                     catch (Exception e)
                     {
-                        if(ValiderArgumentUrl(urlTrouvee) == false)
-                        {
+                     //   if(ValiderArgumentUrl(urlTrouvee) == false)
+                     //   {
                             System.out.println("Url injoignable :" + urlTrouvee);
-                        }
+                      //  }
                     }
 
                     // pages web existantes mais non consultables
 
                 }
             }
+
+            Explorer(path,profondeur--,urlvisites);
     }
+
 
     public static void Sauvegarder(String Dossier, String url, Document fichier) throws IOException {
       // le but est d'enregistrer le fichier dans e dossier
@@ -204,7 +241,7 @@ public class NoutejiBot {
      public static void  ChercherCourriels(String url, Document docourriel)
      {
          Matcher matcher = p.matcher(docourriel.text());
-         List<String> emails = new ArrayList<>();
+
          while (matcher.find()) {
              if(!emails.contains(matcher.group())) emails.add(matcher.group());
          }
