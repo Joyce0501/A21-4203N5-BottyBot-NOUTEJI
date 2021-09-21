@@ -32,26 +32,41 @@ public class NoutejiBot {
   public static final   List<String> lesLiens = new ArrayList<String>();
   public static final HashSet<String> lesliensSet = new HashSet<>();
   public static final  List<String> emails = new ArrayList<>();
-  public static boolean ArgumentErreurs;
+  public static boolean ArgumentErreurs = false;
+  public static   String instructions =
+            "La commande prend 3 arguments :\n " +
+                    "- une profondeur entre 0 et 99\n " +
+                    "- une URL de site à explorer\n " +
+                    "- un chemin où sauvegarder les résultats";
 
     // private static final  Document doc = Jsoup.connect(url).get();
     public static void main( String[] args ) throws IOException, InterruptedException {
 
-        ValiderNombreArguments(args.length);
-        ValiderArgumentProfondeur(args[0]);
-        ValiderArgumentUrl(args[1]);
-        ValiderArgumentDossier(args[2]);
+        System.out.println("Bonjour, Joyce");
+        ValiderArguments(args.length,args[0],args[1],args[2]);
+        if(ArgumentErreurs)
+        {
+            System.out.println(instructions);
+            return;
+        }
+        System.out.println("Nous pouvons explorer");
         Explorer1erUrl(args[1],args[2],Integer.parseInt(args[0]));
+
     }
 
-    public static int ValiderNombreArguments(int length)
+    public static void ValiderArguments(int length, String Profondeur, String Url , String Dossier)
     {
         if(length != 3)
         {
-            System.err.println("tu dois me fournir 03 arguements. Le premier est un entier , le deuxieme une adresse URL et le dernier une liste");
+            ArgumentErreurs = true;
+            System.err.println("Nombre d'arguments incorrecte");
         }
-
-        return length;
+        else
+        {
+            ValiderArgumentUrl(Url);
+            ValiderArgumentProfondeur(Profondeur);
+            ValiderArgumentDossier(Dossier);
+        }
     }
 
     public static void ValiderArgumentProfondeur(String profondeur)
@@ -63,56 +78,58 @@ public class NoutejiBot {
 
             if ( LaProfondeur < 0 || LaProfondeur > 99)
             {
+                ArgumentErreurs = true;
                 System.err.println("la profondeur doit etre comprise entre 0 et 99 inclusivement");
-            }
-            else
-            {
-                System.out.println("La profondeur est correcte");
             }
 
         }
         catch (Exception e)
         {
+            ArgumentErreurs = true;
             System.out.println("Ceci n'est pas un nombre");
         }
 
 
     }
 
-    public static boolean ValiderArgumentUrl (String lien)
+    public static void ValiderArgumentUrl (String lien)
    {
 
+       try {
+           new URL(lien);
+           Document doc = Jsoup.connect(lien).get();
+       }
+       catch (MalformedURLException e)
+       {
+           ArgumentErreurs = true;
+           System.err.println("Url pas valide");
+       }
+       catch (IOException e) {
+           ArgumentErreurs = true;
+           System.err.println("Impossible de se connecter");
 
-          if (!UrlValidator.getInstance().isValid(lien))
-           {
-               System.err.println("url est invalide");
+       }
 
-           }
-           else
-           {
-               System.out.println("url est valide");
-              // UrlValides.add(lien);
 
-           }
-        return UrlValidator.getInstance().isValid(lien);
    }
 
     // le répertoire où écrire les copies locales des fichiers explorés. Le dossier doit être accessible et on doit pouvoir y écrire. Ecriture seulement
     // est accessible en lecture
 
-    public static Boolean ValiderArgumentDossier (String Dossier)
+    public static void ValiderArgumentDossier (String Dossier)
     {
 
         File monfichier = new File(Dossier);
         if(!monfichier.exists())
         {
+            ArgumentErreurs = true;
             System.err.println("Dossier n'existe pas");
-            return false;
+
         }
-        else
+        else if(!Files.isWritable(Paths.get(Dossier)))
         {
-            System.out.println("c'est good");
-            return true;
+            ArgumentErreurs = true;
+            System.err.println("Impossible d'écrire dans ce dossier");
         }
 
     }
@@ -142,7 +159,7 @@ public class NoutejiBot {
             subList.sort(String.CASE_INSENSITIVE_ORDER);
             System.out.println("Nombre de pages explorées : " + lesLiens.size());
             System.out.println("Nombre de courriels extraits en ordre alphabétique : " + emails.size());
-            for(int i = 0; i <= emails.size();i++)
+            for(int i = 0; i < emails.size();i++)
             {
                 System.out.println(emails.get(i));
             }
@@ -150,19 +167,10 @@ public class NoutejiBot {
 
         }
 
-      /*  Document doc = Jsoup.connect(lurl).get();
-            Elements links = doc.select("a[href]");
-            for (Element e : links) {
-                lesLiens.add(e.attr("abs:href"));
-
-            } */
-
-
         // step 1: url a partir de l'index jamais exploré
         int taille = lesLiens.size();
-            for (int i = urlvisites; i <= taille; i++)
+            for (int i = urlvisites; i < taille; i++)
             {
-
                 String urlCourante = lesLiens.get(i);
                 Document documentUrlCourante = Jsoup.connect(urlCourante).get();
                 Elements elt = documentUrlCourante.select("a");
@@ -171,45 +179,39 @@ public class NoutejiBot {
                 {
 
                     String urlTrouvee = element.absUrl("href");
-                    if(lesliensSet.contains(urlTrouvee))
+                    if(!lesliensSet.contains(urlTrouvee))
                     {
-                        return;
-                    }
-
-                    // l'url decouverte n'est pas valide et pas explorée
-                    try{
-                        new URL(urlTrouvee);
-                        Document documentUrlTrouvee = Jsoup.connect(urlTrouvee).get();
-                        lesLiens.add(urlTrouvee);
                         lesliensSet.add(urlTrouvee);
-                        ChercherCourriels(urlTrouvee,documentUrlTrouvee);
-                        Sauvegarder(path,urlTrouvee,documentUrlTrouvee);
+                        try{
+                            new URL(urlTrouvee);
+                            Document documentUrlTrouvee = Jsoup.connect(urlTrouvee).get();
+                            ChercherCourriels(urlTrouvee,documentUrlTrouvee);
+                            Sauvegarder(path,urlTrouvee,documentUrlTrouvee);
+                            lesLiens.add(urlTrouvee);
+                        }
+                        // l'url decouverte n'est pas valide et pas explorée
 
+
+                        catch (FileNotFoundException e)
+                        {
+
+                        }
+                        //url incorrecte
+                        catch (MalformedURLException e)
+                        {
+                            System.err.println("Url mal formée : " + urlTrouvee);
+                        }
+                        // url non joignables
+                        catch (Exception e)
+                        {
+                            System.err.println("Url injoignable : " + urlTrouvee);
+
+
+                        }
                     }
-
-                    //url incorrecte
-                    catch (MalformedURLException e)
-                    {
-                      //  if(ValiderArgumentUrl(urlTrouvee) == false)
-                   //     {
-                            System.out.println("Url mal formée :" + urlTrouvee);
-                     //   }
-                    }
-                    // url non joignables
-                    catch (Exception e)
-                    {
-                     //   if(ValiderArgumentUrl(urlTrouvee) == false)
-                     //   {
-                            System.out.println("Url injoignable :" + urlTrouvee);
-                      //  }
-                    }
-
-                    // pages web existantes mais non consultables
-
                 }
             }
-
-            Explorer(path,profondeur--,urlvisites);
+            Explorer(path,--profondeur,urlvisites);
     }
 
 
