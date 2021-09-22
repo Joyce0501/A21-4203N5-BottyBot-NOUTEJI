@@ -86,7 +86,7 @@ public class NoutejiBot {
         catch (Exception e)
         {
             ArgumentErreurs = true;
-            System.out.println("Ceci n'est pas un nombre");
+            System.err.println("Ceci n'est pas un entier");
         }
 
 
@@ -206,7 +206,6 @@ public class NoutejiBot {
                         {
                             System.err.println("Url injoignable : " + urlTrouvee);
 
-
                         }
                     }
                 }
@@ -248,7 +247,7 @@ public class NoutejiBot {
              if(!emails.contains(matcher.group())) emails.add(matcher.group());
          }
          // me creer une profondeur actuelle
-         System.out.println("Exploration de " + url);
+         System.out.println("Exploration de >> " + url);
 
      }
 
